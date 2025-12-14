@@ -19,8 +19,40 @@ const BubblePop: React.FC<Props> = ({ words, onComplete }) => {
   const [collectedPokemon, setCollectedPokemon] = useState<number[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Water Type Pokemon IDs (Cute & Popular)
-  const waterPokemonIds = [7, 54, 60, 86, 116, 129, 131, 134, 158, 183, 222, 258, 393, 363, 501];
+  // Expanded Water Type Pokemon IDs to ensure uniqueness for ~25-30 words
+  const waterPokemonIds = [
+    7, 8, 9,        // Squirtle line
+    54, 55,         // Psyduck line
+    60, 61, 62,     // Poliwag line
+    72, 73,         // Tentacool line
+    79, 80,         // Slowpoke line
+    86, 87,         // Seel line
+    90, 91,         // Shellder line
+    98, 99,         // Krabby line
+    116, 117,       // Horsea line
+    118, 119,       // Goldeen line
+    120, 121,       // Staryu line
+    129, 130,       // Magikarp line
+    131,            // Lapras
+    134,            // Vaporeon
+    158, 159, 160,  // Totodile line
+    170, 171,       // Chinchou line
+    183, 184,       // Marill line
+    194, 195,       // Wooper line
+    222,            // Corsola
+    223, 224,       // Remoraid line
+    258, 259, 260,  // Mudkip line
+    270, 271, 272,  // Lotad line
+    278, 279,       // Wingull line
+    320, 321,       // Wailmer line
+    349, 350,       // Feebas line
+    363, 364, 365,  // Spheal line
+    370,            // Luvdisc
+    393, 394, 395,  // Piplup line
+    418, 419,       // Buizel line
+    456, 457,       // Finneon line
+    501, 502, 503   // Oshawott line
+  ];
 
   useEffect(() => {
     setupRound();
@@ -59,9 +91,18 @@ const BubblePop: React.FC<Props> = ({ words, onComplete }) => {
       // Correct
       setPoppedId(bubbleId);
       
-      // Add a random pokemon to the collection
-      const randomPoke = waterPokemonIds[Math.floor(Math.random() * waterPokemonIds.length)];
-      setCollectedPokemon(prev => [...prev, randomPoke]);
+      // Select a random Pokemon that hasn't been collected yet
+      const availablePokemon = waterPokemonIds.filter(id => !collectedPokemon.includes(id));
+      
+      let nextPoke: number;
+      if (availablePokemon.length > 0) {
+        nextPoke = availablePokemon[Math.floor(Math.random() * availablePokemon.length)];
+      } else {
+        // If we somehow run out of unique ones, pick any random one
+        nextPoke = waterPokemonIds[Math.floor(Math.random() * waterPokemonIds.length)];
+      }
+
+      setCollectedPokemon(prev => [...prev, nextPoke]);
 
       setTimeout(() => {
         if (currentIndex < words.length - 1) {
