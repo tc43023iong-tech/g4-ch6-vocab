@@ -8,6 +8,9 @@ import MatchingGame from './components/games/MatchingGame';
 import SpellingBee from './components/games/SpellingBee';
 import FillInBlank from './components/games/FillInBlank';
 import BubblePop from './components/games/BubblePop';
+import WordSearch from './components/games/WordSearch';
+import EchoValley from './components/games/EchoValley';
+import HiddenTreasure from './components/games/HiddenTreasure';
 import { Trophy, Star, ArrowRight, Home } from 'lucide-react';
 
 // Pokemon Configuration
@@ -59,6 +62,33 @@ const GAME_CONFIG = {
     textColor: 'text-cyan-600',
     iconColor: 'bg-cyan-200'
   },
+  [GameType.WORD_SEARCH]: { 
+    id: GameType.WORD_SEARCH, 
+    name: 'Word Search', 
+    pokeId: 201, // Unown
+    color: 'bg-indigo-50', 
+    borderColor: 'border-indigo-200',
+    textColor: 'text-indigo-600',
+    iconColor: 'bg-indigo-200'
+  },
+  [GameType.ECHO_VALLEY]: { 
+    id: GameType.ECHO_VALLEY, 
+    name: 'Echo Valley', 
+    pokeId: 441, // Chatot (Mimicry/Sound)
+    color: 'bg-teal-50', 
+    borderColor: 'border-teal-200',
+    textColor: 'text-teal-600',
+    iconColor: 'bg-teal-200'
+  },
+  [GameType.HIDDEN_TREASURE]: { 
+    id: GameType.HIDDEN_TREASURE, 
+    name: 'Hidden Treasure', 
+    pokeId: 63, // Abra (Teleporting/Hidden)
+    color: 'bg-amber-50', 
+    borderColor: 'border-amber-200',
+    textColor: 'text-amber-600',
+    iconColor: 'bg-amber-200'
+  },
 };
 
 const App: React.FC = () => {
@@ -94,6 +124,12 @@ const App: React.FC = () => {
         return <FillInBlank words={WORD_LIST} onComplete={handleGameComplete} />;
       case GameType.BUBBLE:
         return <BubblePop words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.WORD_SEARCH:
+        return <WordSearch words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.ECHO_VALLEY:
+        return <EchoValley words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.HIDDEN_TREASURE:
+        return <HiddenTreasure words={WORD_LIST} onComplete={handleGameComplete} />;
       default:
         return <div>Unknown Game</div>;
     }
@@ -206,23 +242,25 @@ const App: React.FC = () => {
         <div className="w-full h-8 bg-yellow-200/50 absolute top-40 blur-3xl rounded-full"></div>
       </div>
 
-      <div className="max-w-md mx-auto px-4 space-y-4">
+      <div className="max-w-md mx-auto px-4">
         
-        {/* Review Button - Bulbasaur */}
-        <button 
-            onClick={() => setView('review')}
-            className="w-full bg-white p-4 rounded-3xl shadow-lg border-b-8 border-emerald-100 flex items-center gap-4 hover:bg-emerald-50 transition-all active:scale-95 group relative overflow-hidden"
-        >
-            <div className="bg-emerald-100 w-20 h-20 rounded-2xl flex items-center justify-center shrink-0">
-                <img src={`${POKE_IMG_BASE}/1.png`} className="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-md" alt="Bulbasaur"/>
-            </div>
-            <div className="text-left flex-1 z-10">
-                <h3 className="text-xl font-black text-emerald-600">Word Review</h3>
-                <p className="text-emerald-400 font-bold text-sm">Start here!</p>
-            </div>
-            <ArrowRight className="text-emerald-300" />
-            <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/50 to-transparent"></div>
-        </button>
+        {/* Review Button - Bulbasaur - Full Width */}
+        <div className="mb-6">
+            <button 
+                onClick={() => setView('review')}
+                className="w-full bg-white p-4 rounded-3xl shadow-lg border-b-8 border-emerald-100 flex items-center gap-4 hover:bg-emerald-50 transition-all active:scale-95 group relative overflow-hidden"
+            >
+                <div className="bg-emerald-100 w-20 h-20 rounded-2xl flex items-center justify-center shrink-0">
+                    <img src={`${POKE_IMG_BASE}/1.png`} className="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-md" alt="Bulbasaur"/>
+                </div>
+                <div className="text-left flex-1 z-10">
+                    <h3 className="text-xl font-black text-emerald-600">Word Review</h3>
+                    <p className="text-emerald-400 font-bold text-sm">Start here!</p>
+                </div>
+                <ArrowRight className="text-emerald-300" />
+                <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/50 to-transparent"></div>
+            </button>
+        </div>
 
         <div className="flex items-center justify-center my-6 gap-2">
             <div className="h-1 w-12 bg-blue-100 rounded-full"></div>
@@ -230,48 +268,45 @@ const App: React.FC = () => {
             <div className="h-1 w-12 bg-blue-100 rounded-full"></div>
         </div>
 
-        {/* Game Buttons */}
-        {Object.values(GAME_CONFIG).map((game) => {
-            const isDone = completedGames.includes(game.id as GameType);
-            return (
-                <button 
-                    key={game.id}
-                    onClick={() => startGame(game.id as GameType)}
-                    className={`
-                        w-full p-3 rounded-3xl shadow-md border-b-8 flex items-center gap-4 transition-transform active:scale-95 active:border-b-0 translate-y-0
-                        ${game.color} ${game.borderColor}
-                        bg-white
-                    `}
-                >
-                    <div className={`w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 ${game.iconColor}`}>
-                        <img 
-                            src={`${POKE_IMG_BASE}/${game.pokeId}.png`} 
-                            className="w-18 h-18 object-contain drop-shadow-sm transform hover:scale-110 transition-transform duration-300" 
-                            alt={game.name}
-                        />
-                    </div>
-                    
-                    <div className="text-left flex-1">
-                        <h3 className={`text-xl font-black ${game.textColor}`}>{game.name}</h3>
-                        <div className="flex gap-1 mt-1 opacity-60">
-                             <Star className={`w-4 h-4 ${game.textColor} fill-current`} />
-                             <Star className={`w-4 h-4 ${game.textColor} fill-current`} />
-                             <Star className={`w-4 h-4 ${game.textColor} fill-current`} />
+        {/* Game Buttons Grid - 2 Columns */}
+        <div className="grid grid-cols-2 gap-4">
+            {Object.values(GAME_CONFIG).map((game) => {
+                const isDone = completedGames.includes(game.id as GameType);
+                return (
+                    <button 
+                        key={game.id}
+                        onClick={() => startGame(game.id as GameType)}
+                        className={`
+                            relative w-full p-3 rounded-3xl shadow-md border-b-8 flex flex-col items-center gap-3 transition-transform active:scale-95 active:border-b-0 translate-y-0 text-center
+                            ${game.color} ${game.borderColor}
+                            bg-white h-full
+                        `}
+                    >
+                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${game.iconColor}`}>
+                            <img 
+                                src={`${POKE_IMG_BASE}/${game.pokeId}.png`} 
+                                className="w-14 h-14 object-contain drop-shadow-sm transform hover:scale-110 transition-transform duration-300" 
+                                alt={game.name}
+                            />
                         </div>
-                    </div>
+                        
+                        <div className="flex-1 flex flex-col items-center">
+                            <h3 className={`text-sm md:text-base font-black ${game.textColor} leading-tight`}>{game.name}</h3>
+                            <div className="flex gap-0.5 mt-1 opacity-60">
+                                <Star className={`w-3 h-3 ${game.textColor} fill-current`} />
+                                <Star className={`w-3 h-3 ${game.textColor} fill-current`} />
+                            </div>
+                        </div>
 
-                    {isDone ? (
-                        <div className="bg-green-500 text-white p-2 rounded-full shadow-lg animate-bounce">
-                            <Trophy className="w-5 h-5" />
-                        </div>
-                    ) : (
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${game.iconColor} opacity-50`}>
-                            <ArrowRight className={`w-5 h-5 ${game.textColor}`} />
-                        </div>
-                    )}
-                </button>
-            )
-        })}
+                        {isDone && (
+                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-lg animate-bounce">
+                                <Trophy className="w-3 h-3" />
+                            </div>
+                        )}
+                    </button>
+                )
+            })}
+        </div>
       </div>
       
       <style>{`

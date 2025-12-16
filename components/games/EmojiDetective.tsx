@@ -66,7 +66,12 @@ const EmojiDetective: React.FC<Props> = ({ words, onComplete }) => {
       <div className="bg-white rounded-3xl p-8 shadow-xl mb-8 flex flex-col items-center w-full max-w-2xl border-b-8 border-blue-200">
         <h3 className="text-xl text-gray-500 font-bold mb-2">🕵️ Emoji Detective</h3>
         <div className="text-8xl mb-4 animate-bounce">{words[currentIndex].emoji}</div>
-        <div className="text-xl text-gray-400 font-medium">What is this?</div>
+        
+        {/* Added Chinese Meaning */}
+        <div className="text-4xl font-black text-gray-800 mb-2 tracking-wide">
+            {words[currentIndex].ch}
+        </div>
+        <div className="text-lg text-gray-400 font-medium">Which English word matches?</div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">

@@ -16,6 +16,9 @@ export enum GameType {
   SPELLING = 'spelling',
   FILL_BLANK = 'fill_blank',
   BUBBLE = 'bubble',
+  WORD_SEARCH = 'word_search',
+  ECHO_VALLEY = 'echo_valley',
+  HIDDEN_TREASURE = 'hidden_treasure',
 }
 
 export interface Furniture {
