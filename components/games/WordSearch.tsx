@@ -17,6 +17,7 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
   
   // Selection state for click-click interaction
   const [selectionStart, setSelectionStart] = useState<{row: number, col: number} | null>(null);
+  const [hoverPos, setHoverPos] = useState<{row: number, col: number} | null>(null);
 
   // Split words into batches
   const batches = [];
@@ -44,6 +45,7 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
     setTargetWords(currentBatch);
     setFoundWords([]);
     setSelectionStart(null);
+    setHoverPos(null);
     
     // Create Empty Grid
     const newGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
@@ -108,10 +110,18 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
       if (!selectionStart) {
           // First click
           setSelectionStart({ row: r, col: c });
+          setHoverPos({ row: r, col: c });
       } else {
           // Second click
           checkSelection(selectionStart, { row: r, col: c });
           setSelectionStart(null);
+          setHoverPos(null);
+      }
+  };
+
+  const handleCellHover = (r: number, c: number) => {
+      if (selectionStart) {
+          setHoverPos({ row: r, col: c });
       }
   };
 
@@ -153,25 +163,70 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
   };
 
   const isSelected = (r: number, c: number) => {
-    // Only highlight the start cell
-    return selectionStart && selectionStart.row === r && selectionStart.col === c;
+    // Exact start cell
+    if (selectionStart && selectionStart.row === r && selectionStart.col === c) return true;
+    return false;
+  };
+
+  const isPreviewPath = (r: number, c: number) => {
+      if (!selectionStart || !hoverPos) return false;
+      // If same cell, handled by isSelected
+      if (selectionStart.row === r && selectionStart.col === c) return false;
+
+      // Check if this cell is part of the line between selectionStart and hoverPos
+      const start = selectionStart;
+      const end = hoverPos;
+
+      if (start.row === end.row) { // Horizontal Line
+          if (r !== start.row) return false;
+          const min = Math.min(start.col, end.col);
+          const max = Math.max(start.col, end.col);
+          return c >= min && c <= max;
+      } else if (start.col === end.col) { // Vertical Line
+          if (c !== start.col) return false;
+          const min = Math.min(start.row, end.row);
+          const max = Math.max(start.row, end.row);
+          return r >= min && r <= max;
+      }
+      return false;
   };
 
   if (batchIndex >= batches.length) return <div className="text-center p-10 font-bold text-2xl text-green-600">All Words Found!</div>;
 
   return (
     <div className="flex flex-col items-center w-full h-full max-w-4xl mx-auto p-4">
-      <div className="flex justify-between w-full mb-4 items-center">
+      <div className="flex justify-between w-full mb-2 items-center">
           <h3 className="text-2xl font-bold text-indigo-600">Word Search</h3>
           <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-bold">
               Round {batchIndex + 1}/{batches.length}
           </span>
       </div>
 
-      <div className="mb-2 text-indigo-400 text-sm font-bold">
-         Click the <span className="underline">first</span> letter, then click the <span className="underline">last</span> letter!
+      <div className="mb-4 text-indigo-400 text-sm font-bold bg-white px-4 py-2 rounded-full shadow-sm">
+         👆 Click the <span className="text-indigo-600 font-extrabold">first</span> letter, then click the <span className="text-indigo-600 font-extrabold">last</span> letter!
       </div>
       
+      {/* Word List - Top */}
+      <div className="mb-6 grid grid-cols-2 md:grid-cols-3 gap-3 w-full">
+         {targetWords.map(w => {
+             const found = foundWords.includes(w.id);
+             return (
+                 <div 
+                    key={w.id} 
+                    className={`
+                        p-2 rounded-lg border-2 flex items-center justify-between transition-all
+                        ${found ? 'bg-green-100 border-green-400 opacity-50' : 'bg-white border-indigo-100 shadow-sm'}
+                    `}
+                 >
+                     <span className={`font-bold text-sm md:text-base lowercase ${found ? 'text-green-700 line-through' : 'text-gray-700'}`}>
+                         {w.en}
+                     </span>
+                     {found && <span className="text-green-600">✅</span>}
+                 </div>
+             )
+         })}
+      </div>
+
       {/* Grid */}
       <div 
         className="bg-white p-4 rounded-xl shadow-lg border-4 border-indigo-200 select-none touch-none"
@@ -179,43 +234,31 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
         <div 
             className="grid gap-1"
             style={{ gridTemplateColumns: `repeat(${GRID_SIZE}, minmax(0, 1fr))` }}
+            onMouseLeave={() => setHoverPos(null)}
         >
             {grid.map((row, r) => (
-                row.map((letter, c) => (
-                    <button
-                        key={`${r}-${c}`}
-                        onClick={() => handleCellClick(r, c)}
-                        className={`
-                            w-8 h-8 md:w-10 md:h-10 flex items-center justify-center font-bold text-lg md:text-xl rounded-full cursor-pointer transition-colors
-                            ${isSelected(r, c) ? 'bg-indigo-500 text-white scale-110 ring-4 ring-indigo-200' : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100'}
-                        `}
-                    >
-                        {letter}
-                    </button>
-                ))
+                row.map((letter, c) => {
+                    const active = isSelected(r, c);
+                    const preview = isPreviewPath(r, c);
+                    
+                    return (
+                        <button
+                            key={`${r}-${c}`}
+                            onClick={() => handleCellClick(r, c)}
+                            onMouseEnter={() => handleCellHover(r, c)}
+                            className={`
+                                w-8 h-8 md:w-10 md:h-10 flex items-center justify-center font-bold text-lg md:text-xl rounded-full cursor-pointer transition-all duration-150
+                                ${active ? 'bg-indigo-600 text-white scale-110 ring-4 ring-indigo-200 z-10' : ''}
+                                ${preview ? 'bg-indigo-300 text-white scale-105' : ''}
+                                ${!active && !preview ? 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100' : ''}
+                            `}
+                        >
+                            {letter}
+                        </button>
+                    )
+                })
             ))}
         </div>
-      </div>
-
-      {/* Word List */}
-      <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4 w-full">
-         {targetWords.map(w => {
-             const found = foundWords.includes(w.id);
-             return (
-                 <div 
-                    key={w.id} 
-                    className={`
-                        p-3 rounded-xl border-2 flex items-center justify-between transition-all
-                        ${found ? 'bg-green-100 border-green-400 opacity-50' : 'bg-white border-indigo-100 shadow-sm'}
-                    `}
-                 >
-                     <span className={`font-bold lowercase ${found ? 'text-green-700 line-through' : 'text-gray-700'}`}>
-                         {w.en}
-                     </span>
-                     {found && <span className="text-xl">✅</span>}
-                 </div>
-             )
-         })}
       </div>
     </div>
   );

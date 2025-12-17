@@ -10,6 +10,8 @@ import FillInBlank from './components/games/FillInBlank';
 import BubblePop from './components/games/BubblePop';
 import WordSearch from './components/games/WordSearch';
 import HiddenTreasure from './components/games/HiddenTreasure';
+import CrosswordGame from './components/games/CrosswordGame';
+import WordJigsaw from './components/games/WordJigsaw';
 import { Trophy, Star, ArrowRight, Home } from 'lucide-react';
 
 // Pokemon Configuration
@@ -73,11 +75,29 @@ const GAME_CONFIG = {
   [GameType.HIDDEN_TREASURE]: { 
     id: GameType.HIDDEN_TREASURE, 
     name: 'Hidden Treasure', 
-    pokeId: 63, // Abra (Teleporting/Hidden)
+    pokeId: 63, // Abra
     color: 'bg-amber-50', 
     borderColor: 'border-amber-200',
     textColor: 'text-amber-600',
     iconColor: 'bg-amber-200'
+  },
+  [GameType.CROSSWORD]: { 
+    id: GameType.CROSSWORD, 
+    name: 'Crossword Puzzle', 
+    pokeId: 235, // Smeargle (Artist/Painter)
+    color: 'bg-lime-50', 
+    borderColor: 'border-lime-200',
+    textColor: 'text-lime-600',
+    iconColor: 'bg-lime-200'
+  },
+  [GameType.JIGSAW]: { 
+    id: GameType.JIGSAW, 
+    name: 'Word Builder', 
+    pokeId: 137, // Porygon (Blocks)
+    color: 'bg-orange-50', 
+    borderColor: 'border-orange-200',
+    textColor: 'text-orange-600',
+    iconColor: 'bg-orange-200'
   },
 };
 
@@ -118,6 +138,10 @@ const App: React.FC = () => {
         return <WordSearch words={WORD_LIST} onComplete={handleGameComplete} />;
       case GameType.HIDDEN_TREASURE:
         return <HiddenTreasure words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.CROSSWORD:
+        return <CrosswordGame words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.JIGSAW:
+        return <WordJigsaw words={WORD_LIST} onComplete={handleGameComplete} />;
       default:
         return <div>Unknown Game</div>;
     }

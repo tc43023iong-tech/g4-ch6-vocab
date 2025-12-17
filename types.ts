@@ -18,6 +18,8 @@ export enum GameType {
   BUBBLE = 'bubble',
   WORD_SEARCH = 'word_search',
   HIDDEN_TREASURE = 'hidden_treasure',
+  CROSSWORD = 'crossword',
+  JIGSAW = 'jigsaw',
 }
 
 export interface Furniture {
