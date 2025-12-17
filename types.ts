@@ -17,7 +17,6 @@ export enum GameType {
   FILL_BLANK = 'fill_blank',
   BUBBLE = 'bubble',
   WORD_SEARCH = 'word_search',
-  ECHO_VALLEY = 'echo_valley',
   HIDDEN_TREASURE = 'hidden_treasure',
 }
 

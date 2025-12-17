@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WordItem } from '../../types';
 
 interface Props {
@@ -14,10 +14,9 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
   const [grid, setGrid] = useState<string[][]>([]);
   const [targetWords, setTargetWords] = useState<WordItem[]>([]);
   const [foundWords, setFoundWords] = useState<string[]>([]);
-  const [selection, setSelection] = useState<{row: number, col: number}[]>([]);
-  const [isSelecting, setIsSelecting] = useState(false);
   
-  const startPos = useRef<{row: number, col: number} | null>(null);
+  // Selection state for click-click interaction
+  const [selectionStart, setSelectionStart] = useState<{row: number, col: number} | null>(null);
 
   // Split words into batches
   const batches = [];
@@ -44,6 +43,7 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
   const initGame = (currentBatch: WordItem[]) => {
     setTargetWords(currentBatch);
     setFoundWords([]);
+    setSelectionStart(null);
     
     // Create Empty Grid
     const newGrid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(''));
@@ -103,56 +103,48 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
     }
   };
 
-  // Interaction Handlers
-  const handleMouseDown = (r: number, c: number) => {
-    setIsSelecting(true);
-    startPos.current = { row: r, col: c };
-    setSelection([{ row: r, col: c }]);
+  // Interaction Handlers (Click start, then Click end)
+  const handleCellClick = (r: number, c: number) => {
+      if (!selectionStart) {
+          // First click
+          setSelectionStart({ row: r, col: c });
+      } else {
+          // Second click
+          checkSelection(selectionStart, { row: r, col: c });
+          setSelectionStart(null);
+      }
   };
 
-  const handleMouseEnter = (r: number, c: number) => {
-    if (!isSelecting || !startPos.current) return;
-    
-    const start = startPos.current;
-    const newSelection = [];
-    
-    const dr = r - start.row;
-    const dc = c - start.col;
-    
-    const steps = Math.max(Math.abs(dr), Math.abs(dc));
-    if (steps === 0) return;
+  const checkSelection = (start: {row: number, col: number}, end: {row: number, col: number}) => {
+    // Construct word from selection
+    // Determine direction and letters
+    const dr = end.row - start.row;
+    const dc = end.col - start.col;
+    let selectedWord = '';
 
-    if (Math.abs(dr) > Math.abs(dc)) {
-       // Vertical
-       const stepY = dr > 0 ? 1 : -1;
-       for(let i=0; i<=Math.abs(dr); i++) {
-         newSelection.push({ row: start.row + i*stepY, col: start.col });
-       }
+    // We only support Horizontal and Vertical in this generator
+    if (dr === 0) {
+        // Horizontal
+        const step = dc > 0 ? 1 : -1;
+        for (let i = 0; i <= Math.abs(dc); i++) {
+            selectedWord += grid[start.row][start.col + (i * step)];
+        }
+    } else if (dc === 0) {
+        // Vertical
+        const step = dr > 0 ? 1 : -1;
+        for (let i = 0; i <= Math.abs(dr); i++) {
+            selectedWord += grid[start.row + (i * step)][start.col];
+        }
     } else {
-       // Horizontal
-       const stepX = dc > 0 ? 1 : -1;
-       for(let i=0; i<=Math.abs(dc); i++) {
-         newSelection.push({ row: start.row, col: start.col + i*stepX });
-       }
+        // Diagonal or invalid line (not supported by generator currently)
+        return;
     }
     
-    setSelection(newSelection);
-  };
-
-  const handleMouseUp = () => {
-    setIsSelecting(false);
-    checkSelection();
-    setSelection([]);
-  };
-
-  const checkSelection = () => {
-    // Construct word from selection
-    const selectedWord = selection.map(pos => grid[pos.row][pos.col]).join('');
-    
-    // Check against target words (Lowercase check)
+    // Check match
     const match = targetWords.find(w => {
        const cleanEn = w.en.toLowerCase().replace(/[^a-z]/g, '');
-       return cleanEn === selectedWord && !foundWords.includes(w.id);
+       // Check forward or reverse selection
+       return (cleanEn === selectedWord || cleanEn === selectedWord.split('').reverse().join('')) && !foundWords.includes(w.id);
     });
 
     if (match) {
@@ -161,24 +153,28 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
   };
 
   const isSelected = (r: number, c: number) => {
-    return selection.some(s => s.row === r && s.col === c);
+    // Only highlight the start cell
+    return selectionStart && selectionStart.row === r && selectionStart.col === c;
   };
 
   if (batchIndex >= batches.length) return <div className="text-center p-10 font-bold text-2xl text-green-600">All Words Found!</div>;
 
   return (
-    <div className="flex flex-col items-center w-full h-full max-w-4xl mx-auto p-4" onMouseUp={handleMouseUp}>
+    <div className="flex flex-col items-center w-full h-full max-w-4xl mx-auto p-4">
       <div className="flex justify-between w-full mb-4 items-center">
           <h3 className="text-2xl font-bold text-indigo-600">Word Search</h3>
           <span className="bg-indigo-100 text-indigo-800 px-3 py-1 rounded-full text-sm font-bold">
               Round {batchIndex + 1}/{batches.length}
           </span>
       </div>
+
+      <div className="mb-2 text-indigo-400 text-sm font-bold">
+         Click the <span className="underline">first</span> letter, then click the <span className="underline">last</span> letter!
+      </div>
       
       {/* Grid */}
       <div 
         className="bg-white p-4 rounded-xl shadow-lg border-4 border-indigo-200 select-none touch-none"
-        style={{ touchAction: 'none' }}
       >
         <div 
             className="grid gap-1"
@@ -186,17 +182,16 @@ const WordSearch: React.FC<Props> = ({ words, onComplete }) => {
         >
             {grid.map((row, r) => (
                 row.map((letter, c) => (
-                    <div
+                    <button
                         key={`${r}-${c}`}
-                        onMouseDown={() => handleMouseDown(r, c)}
-                        onMouseEnter={() => handleMouseEnter(r, c)}
+                        onClick={() => handleCellClick(r, c)}
                         className={`
                             w-8 h-8 md:w-10 md:h-10 flex items-center justify-center font-bold text-lg md:text-xl rounded-full cursor-pointer transition-colors
-                            ${isSelected(r, c) ? 'bg-indigo-500 text-white scale-110' : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100'}
+                            ${isSelected(r, c) ? 'bg-indigo-500 text-white scale-110 ring-4 ring-indigo-200' : 'bg-indigo-50 text-indigo-800 hover:bg-indigo-100'}
                         `}
                     >
                         {letter}
-                    </div>
+                    </button>
                 ))
             ))}
         </div>

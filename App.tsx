@@ -9,7 +9,6 @@ import SpellingBee from './components/games/SpellingBee';
 import FillInBlank from './components/games/FillInBlank';
 import BubblePop from './components/games/BubblePop';
 import WordSearch from './components/games/WordSearch';
-import EchoValley from './components/games/EchoValley';
 import HiddenTreasure from './components/games/HiddenTreasure';
 import { Trophy, Star, ArrowRight, Home } from 'lucide-react';
 
@@ -71,15 +70,6 @@ const GAME_CONFIG = {
     textColor: 'text-indigo-600',
     iconColor: 'bg-indigo-200'
   },
-  [GameType.ECHO_VALLEY]: { 
-    id: GameType.ECHO_VALLEY, 
-    name: 'Echo Valley', 
-    pokeId: 441, // Chatot (Mimicry/Sound)
-    color: 'bg-teal-50', 
-    borderColor: 'border-teal-200',
-    textColor: 'text-teal-600',
-    iconColor: 'bg-teal-200'
-  },
   [GameType.HIDDEN_TREASURE]: { 
     id: GameType.HIDDEN_TREASURE, 
     name: 'Hidden Treasure', 
@@ -126,8 +116,6 @@ const App: React.FC = () => {
         return <BubblePop words={WORD_LIST} onComplete={handleGameComplete} />;
       case GameType.WORD_SEARCH:
         return <WordSearch words={WORD_LIST} onComplete={handleGameComplete} />;
-      case GameType.ECHO_VALLEY:
-        return <EchoValley words={WORD_LIST} onComplete={handleGameComplete} />;
       case GameType.HIDDEN_TREASURE:
         return <HiddenTreasure words={WORD_LIST} onComplete={handleGameComplete} />;
       default:
