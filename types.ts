@@ -20,6 +20,7 @@ export enum GameType {
   HIDDEN_TREASURE = 'hidden_treasure',
   CROSSWORD = 'crossword',
   JIGSAW = 'jigsaw',
+  RAIN_DROPS = 'rain_drops',
 }
 
 export interface Furniture {

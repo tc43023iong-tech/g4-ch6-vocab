@@ -8,18 +8,25 @@ interface Props {
 }
 
 const EmojiDetective: React.FC<Props> = ({ words, onComplete }) => {
+  const [shuffledWords, setShuffledWords] = useState<WordItem[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [options, setOptions] = useState<WordItem[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   
-  // Shuffle logic
+  // 初始化時打亂所有單詞
   useEffect(() => {
-    generateQuestion();
-  }, [currentIndex]);
+    setShuffledWords([...words].sort(() => 0.5 - Math.random()));
+  }, [words]);
+
+  useEffect(() => {
+    if (shuffledWords.length > 0) {
+      generateQuestion();
+    }
+  }, [currentIndex, shuffledWords]);
 
   const generateQuestion = () => {
-    const currentWord = words[currentIndex];
+    const currentWord = shuffledWords[currentIndex];
     const distractors = words
       .filter(w => w.id !== currentWord.id)
       .sort(() => 0.5 - Math.random())
@@ -32,22 +39,21 @@ const EmojiDetective: React.FC<Props> = ({ words, onComplete }) => {
   };
 
   const handleSelect = (id: string) => {
-    if (selectedId) return; // Prevent double click
+    if (selectedId) return;
     
     setSelectedId(id);
-    const correct = id === words[currentIndex].id;
+    const correct = id === shuffledWords[currentIndex].id;
     setIsCorrect(correct);
 
     if (correct) {
       setTimeout(() => {
-        if (currentIndex < words.length - 1) {
+        if (currentIndex < shuffledWords.length - 1) {
           setCurrentIndex(prev => prev + 1);
         } else {
           onComplete();
         }
-      }, 1500);
+      }, 1200);
     } else {
-        // Allow retry after delay or just stay there? Let's stay until correct for kids
         setTimeout(() => {
             setSelectedId(null);
             setIsCorrect(null);
@@ -55,46 +61,55 @@ const EmojiDetective: React.FC<Props> = ({ words, onComplete }) => {
     }
   };
 
-  const progress = ((currentIndex) / words.length) * 100;
+  const progress = (currentIndex / shuffledWords.length) * 100;
+
+  if (shuffledWords.length === 0) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full max-w-6xl mx-auto p-4">
-      <div className="w-full bg-gray-200 rounded-full h-4 mb-6 max-w-2xl">
-        <div className="bg-blue-500 h-4 rounded-full transition-all duration-500" style={{ width: `${progress}%` }}></div>
+    <div className="flex flex-col items-center justify-center w-full h-full max-w-6xl mx-auto p-4 font-fredoka">
+      <div className="w-full bg-white/50 rounded-full h-4 mb-8 max-w-2xl border-2 border-white shadow-inner">
+        <div className="bg-gradient-to-r from-rose-400 to-pink-500 h-full rounded-full transition-all duration-500 shadow-md" style={{ width: `${progress}%` }}></div>
       </div>
       
-      <div className="bg-white rounded-3xl p-8 shadow-xl mb-8 flex flex-col items-center w-full max-w-2xl border-b-8 border-blue-200">
-        <h3 className="text-xl text-gray-500 font-bold mb-2">🕵️ Emoji Detective</h3>
-        <div className="text-8xl mb-4 animate-bounce">{words[currentIndex].emoji}</div>
+      <div className="bg-white rounded-[3rem] p-10 shadow-2xl mb-10 flex flex-col items-center w-full max-w-2xl border-b-[12px] border-rose-100 transform hover:rotate-1 transition-transform">
+        <h3 className="text-2xl text-rose-400 font-black mb-4 flex items-center gap-2">🕵️ EMOJI DETECTIVE</h3>
+        <div className="text-9xl mb-6 animate-bounce drop-shadow-lg">{shuffledWords[currentIndex].emoji}</div>
         
-        {/* Added Chinese Meaning */}
-        <div className="text-4xl font-black text-gray-800 mb-2 tracking-wide">
-            {words[currentIndex].ch}
+        <div className="text-5xl font-black text-gray-800 mb-4 tracking-tight">
+            {shuffledWords[currentIndex].ch}
         </div>
-        <div className="text-lg text-gray-400 font-medium">Which English word matches?</div>
+        <div className="text-xl text-gray-400 font-bold italic">Find the matching word!</div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-4xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 w-full max-w-4xl">
         {options.map(option => (
           <button
             key={option.id}
             onClick={() => handleSelect(option.id)}
             className={`
-              p-6 rounded-2xl text-xl font-bold transition-all transform hover:scale-105 shadow-md
+              p-8 rounded-[2.5rem] text-3xl font-black transition-all transform active:scale-90 shadow-xl border-b-8
               ${selectedId === option.id 
-                ? (isCorrect && option.id === words[currentIndex].id ? 'bg-green-400 text-white' : 'bg-red-400 text-white')
-                : 'bg-white text-gray-700 hover:bg-yellow-50'}
+                ? (isCorrect && option.id === shuffledWords[currentIndex].id ? 'bg-green-400 text-white border-green-600' : 'bg-red-400 text-white border-red-600 animate-shake-red')
+                : 'bg-white text-gray-700 border-gray-100 hover:bg-rose-50 hover:border-rose-200'}
             `}
           >
-            <div className="flex items-center justify-between">
-              <span>{option.en}</span>
+            <div className="flex items-center justify-center gap-4">
+              <span>{option.en.toLowerCase()}</span>
               {selectedId === option.id && (
-                 isCorrect && option.id === words[currentIndex].id ? <Check /> : <X />
+                 isCorrect && option.id === shuffledWords[currentIndex].id ? <Check className="w-8 h-8"/> : <X className="w-8 h-8"/>
               )}
             </div>
           </button>
         ))}
       </div>
+      <style>{`
+        @keyframes shake-red {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-8px); }
+          75% { transform: translateX(8px); }
+        }
+        .animate-shake-red { animation: shake-red 0.1s ease-in-out infinite; }
+      `}</style>
     </div>
   );
 };

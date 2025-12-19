@@ -12,12 +12,13 @@ import WordSearch from './components/games/WordSearch';
 import HiddenTreasure from './components/games/HiddenTreasure';
 import CrosswordGame from './components/games/CrosswordGame';
 import WordJigsaw from './components/games/WordJigsaw';
+import RainDrops from './components/games/RainDrops';
 import { Trophy, Star, ArrowRight, Home } from 'lucide-react';
 
 // Pokemon Configuration
-const POKE_IMG_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
+export const POKE_IMG_BASE = "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork";
 
-const GAME_CONFIG = {
+export const GAME_CONFIG = {
   [GameType.DETECTIVE]: { 
     id: GameType.DETECTIVE, 
     name: 'Emoji Detective', 
@@ -84,7 +85,7 @@ const GAME_CONFIG = {
   [GameType.CROSSWORD]: { 
     id: GameType.CROSSWORD, 
     name: 'Crossword Puzzle', 
-    pokeId: 235, // Smeargle (Artist/Painter)
+    pokeId: 235, // Smeargle
     color: 'bg-lime-50', 
     borderColor: 'border-lime-200',
     textColor: 'text-lime-600',
@@ -93,11 +94,20 @@ const GAME_CONFIG = {
   [GameType.JIGSAW]: { 
     id: GameType.JIGSAW, 
     name: 'Word Builder', 
-    pokeId: 137, // Porygon (Blocks)
+    pokeId: 137, // Porygon
     color: 'bg-orange-50', 
     borderColor: 'border-orange-200',
     textColor: 'text-orange-600',
     iconColor: 'bg-orange-200'
+  },
+  [GameType.RAIN_DROPS]: { 
+    id: GameType.RAIN_DROPS, 
+    name: 'Rain Drops', 
+    pokeId: 186, // Politoed
+    color: 'bg-blue-50', 
+    borderColor: 'border-blue-200',
+    textColor: 'text-blue-600',
+    iconColor: 'bg-blue-200'
   },
 };
 
@@ -110,7 +120,7 @@ const App: React.FC = () => {
   const handleGameComplete = () => {
     if (currentGame && !completedGames.includes(currentGame)) {
       setCompletedGames([...completedGames, currentGame]);
-      setUnlockedFurniture(prev => prev + 2); // Reward
+      setUnlockedFurniture(prev => Math.min(prev + 2, 15)); 
       setView('reward');
     } else {
         setView('menu');
@@ -142,6 +152,8 @@ const App: React.FC = () => {
         return <CrosswordGame words={WORD_LIST} onComplete={handleGameComplete} />;
       case GameType.JIGSAW:
         return <WordJigsaw words={WORD_LIST} onComplete={handleGameComplete} />;
+      case GameType.RAIN_DROPS:
+        return <RainDrops words={WORD_LIST} onComplete={handleGameComplete} />;
       default:
         return <div>Unknown Game</div>;
     }
@@ -156,21 +168,28 @@ const App: React.FC = () => {
   }
 
   if (view === 'treehouse' || view === 'reward') {
+    // 獲取當前已收集寶可夢的 ID
+    const collectedPokeIds = completedGames.map(type => GAME_CONFIG[type].pokeId);
+
     return (
-      <div className="relative">
-        <TreeHouse unlockedCount={unlockedFurniture} onBack={() => setView('menu')} />
+      <div className="relative overflow-hidden">
+        <TreeHouse 
+          unlockedCount={unlockedFurniture} 
+          onBack={() => setView('menu')} 
+          collectedPokeIds={collectedPokeIds}
+        />
         {view === 'reward' && (
-             <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                 <div className="bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm mx-4 animate-pop-in relative overflow-hidden">
+             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+                 <div className="bg-white p-8 rounded-[3rem] shadow-2xl text-center max-w-sm w-full animate-pop-in relative overflow-hidden border-8 border-yellow-200">
                      <div className="absolute top-0 left-0 w-full h-4 bg-yellow-400"></div>
-                     <img src={`${POKE_IMG_BASE}/25.png`} alt="Pikachu" className="w-24 h-24 mx-auto -mt-4 mb-2" />
-                     <h2 className="text-3xl font-bold text-orange-500 mb-2">Awesome!</h2>
-                     <p className="text-gray-600 mb-6">You unlocked 2 new items!</p>
+                     <img src={`${POKE_IMG_BASE}/25.png`} alt="Pikachu" className="w-24 h-24 mx-auto -mt-4 mb-2 drop-shadow-lg" />
+                     <h2 className="text-4xl font-black text-orange-500 mb-2">Wonderful!</h2>
+                     <p className="text-gray-600 font-bold mb-6 text-lg">You unlocked new items and a Pokemon friend!</p>
                      <button 
                        onClick={() => setView('treehouse')} 
-                       className="bg-blue-500 text-white font-bold py-3 px-8 rounded-xl shadow-lg hover:bg-blue-600 transform hover:scale-105 transition-all"
+                       className="w-full bg-blue-500 text-white font-black py-4 px-8 rounded-2xl shadow-lg hover:bg-blue-600 transform hover:scale-105 transition-all text-xl"
                      >
-                        Open Gifts
+                        Enter Treehouse 🌳
                      </button>
                  </div>
              </div>
@@ -183,15 +202,15 @@ const App: React.FC = () => {
     const config = currentGame ? GAME_CONFIG[currentGame] : null;
     
     return (
-      <div className="h-screen w-screen bg-slate-50 flex flex-col overflow-hidden">
+      <div className="h-screen w-screen bg-slate-50 flex flex-col overflow-hidden font-fredoka">
         {/* Game Header */}
         <div className="px-4 py-2 flex justify-between items-center bg-white shadow-sm z-10 shrink-0 border-b-4 border-slate-100">
           <button 
             onClick={() => setView('menu')} 
-            className="flex items-center gap-2 text-slate-500 font-bold hover:bg-slate-100 px-3 py-1 rounded-full transition-colors"
+            className="flex items-center gap-2 text-slate-500 font-bold hover:bg-slate-100 px-4 py-2 rounded-full transition-colors border-2 border-transparent hover:border-slate-200"
           >
             <Home className="w-5 h-5" />
-            <span className="hidden sm:inline">Exit</span>
+            <span className="hidden sm:inline">Menu</span>
           </button>
           
           <div className="flex items-center gap-3">
@@ -199,18 +218,17 @@ const App: React.FC = () => {
                  <img 
                     src={`${POKE_IMG_BASE}/${config.pokeId}.png`} 
                     alt="Pokemon" 
-                    className="w-12 h-12 -my-2 drop-shadow-md"
+                    className="w-14 h-14 -my-3 drop-shadow-md animate-float-slow"
                  />
              )}
-             <div className={`font-black text-xl md:text-2xl capitalize tracking-tight ${config?.textColor || 'text-blue-500'}`}>
+             <div className={`font-black text-xl md:text-3xl capitalize tracking-tight ${config?.textColor || 'text-blue-500'}`}>
                 {config?.name || 'Game'}
              </div>
           </div>
           
-          <div className="w-16"></div> {/* Spacer for balance */}
+          <div className="w-20"></div>
         </div>
 
-        {/* Game Container */}
         <div className="flex-1 relative w-full h-full bg-slate-100 flex flex-col">
             {renderGame()}
         </div>
@@ -220,68 +238,61 @@ const App: React.FC = () => {
 
   // Menu View
   return (
-    <div className="min-h-screen bg-[#f0f9ff] pb-20 font-fredoka">
-      
-      {/* Top Navigation */}
-      <div className="p-4 flex justify-end">
+    <div className="min-h-screen bg-[#f0f9ff] pb-20 font-fredoka selection:bg-yellow-200">
+      <div className="p-4 flex justify-between items-center max-w-4xl mx-auto">
+        <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border-2 border-blue-100">
+           <Star className="w-5 h-5 text-yellow-400 fill-yellow-400" />
+           <span className="font-bold text-blue-600">{completedGames.length} / 10 Games</span>
+        </div>
         <button 
           onClick={() => setView('treehouse')}
-          className="flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-full font-bold shadow-sm border-2 border-amber-200 hover:bg-amber-200 transition-colors"
+          className="flex items-center gap-2 bg-gradient-to-r from-amber-400 to-orange-400 text-white px-6 py-3 rounded-full font-black shadow-lg transform hover:scale-105 active:scale-95 transition-all border-b-4 border-orange-600"
         >
-          <Trophy className="w-5 h-5" />
-          <span>Treehouse</span>
+          <Trophy className="w-6 h-6" />
+          <span>My Treehouse</span>
         </button>
       </div>
 
-      {/* Hero Section (Cover) */}
-      <div className="flex flex-col items-center mb-8 px-4">
+      <div className="flex flex-col items-center mb-12 px-4">
         <div className="relative z-10">
             <img 
                 src={`${POKE_IMG_BASE}/25.png`} 
                 alt="Pikachu" 
-                className="w-48 h-48 md:w-60 md:h-60 object-contain drop-shadow-2xl animate-float-slow"
+                className="w-52 h-52 md:w-64 md:h-64 object-contain drop-shadow-2xl animate-float-slow"
             />
-            {/* Speech Bubble */}
-            <div className="absolute -top-4 -right-8 md:-right-24 bg-white px-6 py-4 rounded-3xl rounded-bl-none shadow-xl border-4 border-yellow-400 max-w-[200px] animate-pop-in origin-bottom-left">
-                <p className="font-bold text-gray-700 text-lg leading-tight">
-                    一起學 <br/>
-                    <span className="text-blue-500">g4 ch.6 vocab!</span>
+            <div className="absolute -top-4 -right-12 md:-right-28 bg-white px-8 py-5 rounded-[2.5rem] rounded-bl-none shadow-2xl border-4 border-yellow-400 max-w-[240px] animate-pop-in origin-bottom-left">
+                <p className="font-black text-gray-700 text-xl md:text-2xl leading-tight text-center">
+                    Let's learn <br/>
+                    <span className="text-blue-500 underline decoration-yellow-400 decoration-4">Ch.6 vocab!</span>
                 </p>
             </div>
         </div>
-        
-        {/* Title decorative background */}
-        <div className="w-full h-8 bg-yellow-200/50 absolute top-40 blur-3xl rounded-full"></div>
       </div>
 
       <div className="max-w-md mx-auto px-4">
-        
-        {/* Review Button - Bulbasaur - Full Width */}
-        <div className="mb-6">
+        <div className="mb-8">
             <button 
                 onClick={() => setView('review')}
-                className="w-full bg-white p-4 rounded-3xl shadow-lg border-b-8 border-emerald-100 flex items-center gap-4 hover:bg-emerald-50 transition-all active:scale-95 group relative overflow-hidden"
+                className="w-full bg-white p-5 rounded-[2rem] shadow-xl border-b-8 border-emerald-100 flex items-center gap-5 hover:bg-emerald-50 transition-all active:scale-95 group relative overflow-hidden"
             >
-                <div className="bg-emerald-100 w-20 h-20 rounded-2xl flex items-center justify-center shrink-0">
-                    <img src={`${POKE_IMG_BASE}/1.png`} className="w-16 h-16 group-hover:scale-110 transition-transform drop-shadow-md" alt="Bulbasaur"/>
+                <div className="bg-emerald-100 w-24 h-24 rounded-[1.5rem] flex items-center justify-center shrink-0">
+                    <img src={`${POKE_IMG_BASE}/1.png`} className="w-20 h-20 group-hover:scale-110 transition-transform drop-shadow-md" alt="Bulbasaur"/>
                 </div>
                 <div className="text-left flex-1 z-10">
-                    <h3 className="text-xl font-black text-emerald-600">Word Review</h3>
-                    <p className="text-emerald-400 font-bold text-sm">Start here!</p>
+                    <h3 className="text-2xl font-black text-emerald-600">Review List</h3>
+                    <p className="text-emerald-400 font-bold text-base">Study 25 Words First!</p>
                 </div>
-                <ArrowRight className="text-emerald-300" />
-                <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-white/50 to-transparent"></div>
+                <ArrowRight className="text-emerald-300 w-8 h-8" />
             </button>
         </div>
 
-        <div className="flex items-center justify-center my-6 gap-2">
-            <div className="h-1 w-12 bg-blue-100 rounded-full"></div>
-            <span className="text-blue-300 font-bold uppercase tracking-widest text-xs">Play Games</span>
-            <div className="h-1 w-12 bg-blue-100 rounded-full"></div>
+        <div className="flex items-center justify-center my-8 gap-3">
+            <div className="h-1.5 w-16 bg-blue-100 rounded-full"></div>
+            <span className="text-blue-300 font-black uppercase tracking-[0.2em] text-sm">Game Library</span>
+            <div className="h-1.5 w-16 bg-blue-100 rounded-full"></div>
         </div>
 
-        {/* Game Buttons Grid - 2 Columns */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
             {Object.values(GAME_CONFIG).map((game) => {
                 const isDone = completedGames.includes(game.id as GameType);
                 return (
@@ -289,30 +300,30 @@ const App: React.FC = () => {
                         key={game.id}
                         onClick={() => startGame(game.id as GameType)}
                         className={`
-                            relative w-full p-3 rounded-3xl shadow-md border-b-8 flex flex-col items-center gap-3 transition-transform active:scale-95 active:border-b-0 translate-y-0 text-center
+                            relative w-full p-4 rounded-[2rem] shadow-xl border-b-8 flex flex-col items-center gap-3 transition-all active:scale-95 active:border-b-0 translate-y-0 text-center
                             ${game.color} ${game.borderColor}
-                            bg-white h-full
+                            bg-white h-full group
                         `}
                     >
-                        <div className={`w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 ${game.iconColor}`}>
+                        <div className={`w-20 h-20 rounded-[1.2rem] flex items-center justify-center shrink-0 ${game.iconColor}`}>
                             <img 
                                 src={`${POKE_IMG_BASE}/${game.pokeId}.png`} 
-                                className="w-14 h-14 object-contain drop-shadow-sm transform hover:scale-110 transition-transform duration-300" 
+                                className="w-16 h-16 object-contain drop-shadow-sm transform group-hover:scale-110 transition-transform duration-300" 
                                 alt={game.name}
                             />
                         </div>
                         
                         <div className="flex-1 flex flex-col items-center">
-                            <h3 className={`text-sm md:text-base font-black ${game.textColor} leading-tight`}>{game.name}</h3>
-                            <div className="flex gap-0.5 mt-1 opacity-60">
-                                <Star className={`w-3 h-3 ${game.textColor} fill-current`} />
-                                <Star className={`w-3 h-3 ${game.textColor} fill-current`} />
+                            <h3 className={`text-base font-black ${game.textColor} leading-tight`}>{game.name}</h3>
+                            <div className="flex gap-0.5 mt-1.5 opacity-60">
+                                <Star className={`w-3.5 h-3.5 ${game.textColor} fill-current`} />
+                                <Star className={`w-3.5 h-3.5 ${game.textColor} fill-current`} />
                             </div>
                         </div>
 
                         {isDone && (
-                            <div className="absolute top-2 right-2 bg-green-500 text-white p-1 rounded-full shadow-lg animate-bounce">
-                                <Trophy className="w-3 h-3" />
+                            <div className="absolute top-2 right-2 bg-yellow-400 text-white p-1.5 rounded-full shadow-lg border-2 border-white animate-bounce">
+                                <Trophy className="w-4 h-4 fill-white" />
                             </div>
                         )}
                     </button>
@@ -320,27 +331,6 @@ const App: React.FC = () => {
             })}
         </div>
       </div>
-      
-      <style>{`
-        @keyframes floatSlow {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        .animate-float-slow {
-            animation: floatSlow 3s ease-in-out infinite;
-        }
-        @keyframes popIn {
-            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
-            80% { transform: scale(1.1) rotate(5deg); }
-            100% { transform: scale(1) rotate(0deg); opacity: 1; }
-        }
-        .animate-pop-in {
-            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        .font-fredoka {
-            font-family: 'Fredoka', sans-serif;
-        }
-      `}</style>
     </div>
   );
 };
